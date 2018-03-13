@@ -7,3 +7,4 @@ index using the Conn (2010) method (https://www.nrcresearchpress.com/doi/pdf/10.
 
 Sim.lm simulates simple linear regression data and fits the data using STAN.You need both the .R and .Stan files in the same directory.
 
+EDM_tutorial.r is a brief tutorial running through the different non-linear, non-parametric time series analyses that can be done using Empirical Dynamic Modeling techniques using the rEDM package.
