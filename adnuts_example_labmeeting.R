@@ -59,7 +59,14 @@ adnuts::pairs_admb(fit_rwm, diag = "trace", pars = c(1:5))
 # check for problem signs, e.g. slowly mixing parameters, pars estimated at the bounds
 # if necessary, fix model, e.g. by specifying more informative priors,
 # or fixing pars that are estimated at bounds, or reparameterizing model
-
+#added a quick routine to create an mcmc object to use the coda diagnostics
+mcmc=mcmc.list()
+for(i in 1:nchains_rwm)
+{
+	mcmc[[i]]=as.mcmc(fit_rwm[[1]][,i,1:4])
+}
+gelman.diag(mcmc)
+gelman.plot(mcmc)
 
 
 # run adnuts::sample_admb with nuts option (hameltonian mcmc with no-u-turn sampling)
