@@ -1,5 +1,8 @@
 ## Random Forest tutorial
 
+#### SAS Machine-learning Cheat Sheet
+![SAS Cheat Sheet](./machine-learning-cheet-sheet.png)
+
 This tutorial runs Random Forest models using the `randomForest` package. It covers:
 
 1. Simple vs. Complicated Random Forests
