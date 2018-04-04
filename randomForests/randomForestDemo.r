@@ -1,4 +1,5 @@
 # Nicholas Ducharme-Barth
+# Zach Siders
 # April 3, 2018
 # Brief machine learning tutorial: random forests!
 
@@ -58,11 +59,13 @@
 	partialPlot(simple.rf, train.df, "Sex",0)
 
 	# png(file=paste0(path.read,"Response.curves.png"), width=600, height=400)
-		par(mfrow=c(2,3))
+		par(mfrow=c(2,3), oma=c(0.4,2,0.4,0.4))
 		partialPlot(complicated.rf, train.df, "Sex",0)
+		mtext("Perished", side=2, line=3)
 		partialPlot(complicated.rf, train.df, "Age",0)
 		partialPlot(complicated.rf, train.df, "Fare",0)
 		partialPlot(complicated.rf, train.df, "Sex",1)
+		mtext("Survived", side=2, line=3)
 		partialPlot(complicated.rf, train.df, "Age",1)
 		partialPlot(complicated.rf, train.df, "Fare",1)
 	# dev.off()
