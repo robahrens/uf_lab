@@ -7,26 +7,32 @@
 	{
 		val = data.frame(true=true, pred=pred)
 		# resulting confusion matrix
-			cmx = cmx(val, which.model = 1, na.rm = TRUE)
+			cmx = matrix(c(sum(true==0 & pred==0),
+			               sum(true==0 & pred==1),
+			               sum(true==1 & pred==0),
+			               sum(true==1 & pred==1)), 2, 2)
+			colnames(cmx) = c("T.0","T.1")
+			rownames(cmx) = c("P.0","P.1")
 		# performance metrics
-			PPV = cmx[1,1]/sum(cmx[1,]) # Positive Predictive Value
-			NPV = cmx[2,2]/sum(cmx[2,]) # Negative Predictive Value
-			sensitivity = cmx[1,1]/sum(cmx[,1])
-			specificity = cmx[2,2]/sum(cmx[,2])
-		return(list(PPV=PPV,NPV=NPV,sensitivity=specificity))	
+			PPV = cmx[2,2]/sum(cmx[2,]) # Positive Predictive Value
+			NPV = cmx[1,1]/sum(cmx[1,]) # Negative Predictive Value
+			sensitivity = cmx[2,2]/sum(cmx[,2])
+			specificity = cmx[1,1]/sum(cmx[,1])
+		return(list(cmx=cmx, PPV=PPV,NPV=NPV,sensitivity=sensitivity,specificity=specificity))	
 	}
 
 # load/install.packages
 	library(randomForest)
-	library(PresenceAbsence)
+	# library(PresenceAbsence)
 
 # bring in the data
 # we will use the train and test datasets from the Kaggle machine learning competition
 # these can be found at
 # https://www.kaggle.com/c/titanic/data#
 
-	path.read = "your/path/here/"
+	path.read = "/your_file_path/"
 	# path.read = "/Users/nicholasducharme-barth/Desktop/Course Work/Spring18/RandomForestDemo/"
+	# path.read = "/Volumes/HDD/Users/Zach/Documents/AAA_Git_projects/uf_lab/randomForests/"
 	train = read.csv(paste0(path.read,"train.csv"))
 	test = read.csv(paste0(path.read,"test.csv"))
 
@@ -74,34 +80,64 @@
 # variable importance
 	varImpPlot(simple.rf, main="Variable Importance for simple")
 
-	varImpPlot(complex.rf, main="Variable Importance for complicated")
+	varImpPlot(complicated.rf, main="Variable Importance for complicated")
+
+# need to make a new train/test dataset
+	sample = sample(1:nrow(train.df),floor(nrow(train.df)*0.8), replace=FALSE)
+	train2 = train.df[sample,]
+	test2 = train.df[-sample,]
+
+#rerun RFs with subsetted datasets
+	simple.rf2 = randomForest(as.factor(Survived) ~ Sex, data=train2)
+	complicated.rf2 = randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare, data=train2)
+
+# generate predictions
+	simple.pred2 = predict(simple.rf2, test2)
+	complicated.pred2 = predict(complicated.rf2, test2)
+
+# Performance metrics
+	rf.performance.metrics(test2$Survived, simple.pred2)
+	rf.performance.metrics(test2$Survived, complicated.pred2)
 
 # Receiver Operator Characteristic Curve
-rocr <- function(forest,samples,name){
-	library(ROCR)
-	cls_pred <- prediction(predict(forest, type='prob')[,2], samples)
-	cls_perf <- performance(cls_pred, "tpr", "fpr")
-	cls_ss <- performance(cls_pred, "sens", "spec")
-	cls_ss@x.values[[1]] <- 1-cls_ss@x.values[[1]]
-	cls_auc <- performance(cls_pred, measure='auc')@y.values[[1]]
-	# plot(cls_perf, main="ROC Curve for Random Forest", col=2, lwd=2)
-	# abline(a=0, b=1, lwd=2, lty=2, col="gray")
-		plot(cls_ss, main=paste0("ROC Curve for ",name), col=2, lwd=2, xlab="1-Specificity")
+	rocr <- function(forest,samples,name){
+		library(ROCR)
+		cls_pred <- prediction(predict(forest, type='prob',samples)[,2], samples$Survived)
+		cls_perf <- performance(cls_pred, "tpr", "fpr")
+		cls_nperf <- performance(cls_pred, "tnr", "fnr")
+		cls_ss <- performance(cls_pred, "sens", "spec")
+		cls_ss@x.values[[1]] <- 1-cls_ss@x.values[[1]]
+		cls_auc <- performance(cls_pred, measure='auc')@y.values[[1]]
+		# plot(cls_perf, main="ROC Curve for Random Forest", col=2, lwd=2)
+		# abline(a=0, b=1, lwd=2, lty=2, col="gray")
+			plot(cls_ss, main=paste0("ROC Curve for ",name), col=2, lwd=2, xlab="1-Specificity")
+			abline(a=0, b=1, lwd=2, lty=2, col="gray")
+			text(0.8,0.2,paste0("AUC = ", round(cls_auc,3)), cex=1.2)
+
+		return(list(tpr=cls_perf, ss=cls_ss, tnr=cls_nperf, auc=cls_auc))
+	}
+
+	# ROC for test data
+	roc.simp.test <- rocr(simple.rf2, test2, "simple")
+	roc.comp.test <- rocr(complicated.rf2, test2, "complex")
+
+	# ROC for train data
+	roc.simp.train <- rocr(simple.rf2, train2, "simple")
+	roc.comp.train <- rocr(complicated.rf2, train2, "complex")
+
+	#can just use the original train DF since we subsetted
+	roc.simp.both <- rocr(simple.rf2, train, "simple")
+	roc.comp.both <- rocr(complicated.rf2, train, "complex")
+
+
+# plot up the complicated train/test ROC
+	png(file=paste0(path.read,"ROC.curve.comp.png"), width=400, height=400)
+		plot(roc.comp.test$ss, main="ROC Curve for complicated", col="dodgerblue", lwd=2, xlab="1-Specificity")
+		lines(roc.comp.train$ss@x.values[[1]],roc.comp.train$ss@y.values[[1]], col='seagreen4', lwd=2)
 		abline(a=0, b=1, lwd=2, lty=2, col="gray")
-		text(0.8,0.2,paste0("AUC = ", round(cls_auc,3)), cex=1.2)
-
-	return(list(tpr=cls_perf, ss=cls_ss, tnr=cls_nperf, auc=cls_auc))
-}
-roc.simp.test <- rocr(simple.rf, test, "simple")
-roc.comp.test <- rocr(complex.rf, test, "complex")
-
-roc.simp.train <- rocr(simple.rf, train, "simple")
-roc.comp.train <- rocr(complex.rf, train, "complex")
-
-roc.simp.both <- rocr(simple.rf, test, "simple")
-roc.comp.both <- rocr(complex.rf, test, "complex")
-
-
+		text(0.8,0.2,paste0("Test AUC = ", round(roc.comp.test$auc,3)), cex=1.2, col="dodgerblue")
+		text(0.8,0.3,paste0("Train AUC = ", round(roc.comp.train$auc,3)), cex=1.2, col="seagreen4")
+	dev.off()
 
 
 
