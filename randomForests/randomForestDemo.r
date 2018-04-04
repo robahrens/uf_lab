@@ -57,14 +57,15 @@
 # look at and evaluate output...
 	partialPlot(simple.rf, train.df, "Sex",0)
 
-	par(mfrow=c(2,3))
-	partialPlot(complicated.rf, train.df, "Sex",0)
-	partialPlot(complicated.rf, train.df, "Age",0)
-	partialPlot(complicated.rf, train.df, "Fare",0)
-	partialPlot(complicated.rf, train.df, "Sex",1)
-	partialPlot(complicated.rf, train.df, "Age",1)
-	partialPlot(complicated.rf, train.df, "Fare",1)
-
+	# png(file=paste0(path.read,"Response.curves.png"), width=600, height=400)
+		par(mfrow=c(2,3))
+		partialPlot(complicated.rf, train.df, "Sex",0)
+		partialPlot(complicated.rf, train.df, "Age",0)
+		partialPlot(complicated.rf, train.df, "Fare",0)
+		partialPlot(complicated.rf, train.df, "Sex",1)
+		partialPlot(complicated.rf, train.df, "Age",1)
+		partialPlot(complicated.rf, train.df, "Fare",1)
+	# dev.off()
 # how does increasing trees impact performance
 	randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare, data=train.df,ntree=10)
 	randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare, data=train.df,ntree=100)
@@ -131,13 +132,13 @@
 
 
 # plot up the complicated train/test ROC
-	png(file=paste0(path.read,"ROC.curve.comp.png"), width=400, height=400)
+	# png(file=paste0(path.read,"ROC.curve.comp.png"), width=400, height=400)
 		plot(roc.comp.test$ss, main="ROC Curve for complicated", col="dodgerblue", lwd=2, xlab="1-Specificity")
 		lines(roc.comp.train$ss@x.values[[1]],roc.comp.train$ss@y.values[[1]], col='seagreen4', lwd=2)
 		abline(a=0, b=1, lwd=2, lty=2, col="gray")
 		text(0.8,0.2,paste0("Test AUC = ", round(roc.comp.test$auc,3)), cex=1.2, col="dodgerblue")
 		text(0.8,0.3,paste0("Train AUC = ", round(roc.comp.train$auc,3)), cex=1.2, col="seagreen4")
-	dev.off()
+	# dev.off()
 
 
 

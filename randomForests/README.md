@@ -4,6 +4,7 @@ This tutorial runs Random Forest models using the `randomForest` package. It cov
 
 1. Simple vs. Complicated Random Forests
 2. Covariate response curves
+![Response curves](./Response.curves.png)
 3. Changes in performance with # of trees or # of variables at splits
 4. Variable Importance Plots
 5. Confusion Matrices & Performance Metrics
